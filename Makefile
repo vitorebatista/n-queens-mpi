@@ -5,7 +5,7 @@ CCFLAGS = -Wall
 #CCFLAGS =
 LDFLAGS =
 #LDFLAGS = -llmpe -lmpe
-TARGET = mpiqueen
+TARGET = mpiqueen help
 
 #%.o: %.c
 #	$(CC) $(CCFLAGS) -c $<
@@ -14,6 +14,12 @@ TARGET = mpiqueen
 #	$(CC) $^ -o $@
 
 all: $(TARGET)
+
+help:
+	@echo
+	@echo
+	@echo "####### Exemplo de Execução #######"
+	@echo "mpirun -np 3 -mca btl ^openib  -mca orte_base_help_aggregate 0 ./mpiqueen"
 
 clean:
 	rm -f *.o *~ $(TARGET)

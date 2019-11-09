@@ -475,8 +475,9 @@ int main(int argc, char *argv[])
 
         if (argc < 2)
         {
-            fputs("size:  ", stdout);
-            scanf("%d", &size);
+            //fputs("size:  ", stdout);
+            //scanf("%d", &size);
+            size = 14;
         }
         else
         {
@@ -496,8 +497,8 @@ int main(int argc, char *argv[])
         ClockT = Clock[1] - Clock[0];
         printf("%22.15lg %22.15lg %22.15lg\n%22.15lg %22.15lg %22.15lg\n",
                Clock[1], Clock[0], ClockT, CPU[1], CPU[0], Lapsed);
-        printf("%3d ==> %10ld  %10ld  %15.8lg  %15.8lg\n",
-               size, Nunique, Ntotal, Lapsed, ClockT);
+        printf("%3d ==> %10ld  %10ld \n",
+               size, Nunique, Ntotal);
         for (k = 1; k < nProc; k++)
             printf("%15.7lg", clientTime[k]);
         putchar('\n');
