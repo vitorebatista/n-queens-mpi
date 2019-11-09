@@ -5,7 +5,7 @@ CCFLAGS = -Wall
 #CCFLAGS =
 LDFLAGS =
 #LDFLAGS = -llmpe -lmpe
-TARGET = mpiqueen help
+TARGET = mpiqueen help optqueen 
 
 #%.o: %.c
 #	$(CC) $(CCFLAGS) -c $<

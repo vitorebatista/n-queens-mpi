@@ -15,9 +15,11 @@
 #include <mpi.h>
 #include <ctype.h>
 #include <string.h>
-#include "cpuTimes.h"
+#include "util.c"
 
-//#include <malloc.h>
+// Zero para o mestre MPI
+#define MPI_MATER 0
+
 
 long int Nunique = 0, // Accumulate results here
     Ntotal = 0;
@@ -26,33 +28,11 @@ enum
 {
     FALSE,
     TRUE
-} TRACE = FALSE; // Enable/disable tracing execution
+} TRACE = TRUE; // Enable/disable tracing execution
 
 // These need to be modified outside of Nqueens
 short *Diag = NULL, *AntiD = NULL;
 
-/* Mark a particular [R][C] board cell as in-use or available     */
-/* Massively used; inline to eliminate the function call overhead */
-/*
-inline void Mark (
-     int R, int C, int size,
-     short Diag[], short AntiD[], int Flag)
-{
-   int Idx;
-
-// Diagonal:  Row-Col == constant
-   Idx = R - C + size-1;
-   Diag[Idx] = Flag;
-// AntiDiagonal:  Row+Col == constant
-   Idx = R + C;
-   AntiD[Idx] = Flag;
-}
---- for straight C, make a #define macro   */
-#define Mark(R, C, size, Diag, AntiD, Flag) \
-    {                                       \
-        Diag[R - C + size - 1] = Flag;      \
-        AntiD[R + C] = Flag;                \
-    }
 /*
 Here are the definitions of the public fields of MPI_Status:
     int MPI_SOURCE;
@@ -161,14 +141,6 @@ void StartQueens(int size, double *clientTime)
         puts("Exiting StartQueens.");
 }
 
-// Macro to swap datatype x, locations y and z
-#define swap(x, y, z) \
-    {                 \
-        x temp = y;   \
-        y = z;        \
-        z = temp;     \
-    }
-
 // Prototype for forward referencing
 void Nqueens(int *, int *, int, int);
 
@@ -261,39 +233,6 @@ void ProcessQueens(int myPos)
 /*            And finally, all the Nqueens logic                */
 /****************************************************************/
 
-/* Check two vectors for equality; return first inequality (a la strncmp) */
-int intncmp(int L[], int R[], int N)
-{
-    int Idx;
-
-    for (Idx = 0; Idx < N; Idx++)
-        if (L[Idx] - R[Idx])
-            return L[Idx] - R[Idx];
-    return 0;
-}
-
-/* Rotate +90 or -90: */
-void Rotate(int R[], int C[], int N, int Neg)
-{
-    int Idx, Jdx;
-
-    Jdx = Neg ? 0 : N - 1;
-    for (Idx = 0; Idx < N; Neg ? Jdx++ : Jdx--)
-        C[Idx++] = R[Jdx];
-    Jdx = Neg ? N - 1 : 0;
-    for (Idx = 0; Idx < N; Neg ? Jdx-- : Jdx++)
-        R[C[Idx++]] = Jdx;
-}
-
-/* Vertical mirror:  reflect each row across the middle */
-void Vmirror(int R[], int N)
-{
-    int Idx;
-
-    for (Idx = 0; Idx < N; Idx++)
-        R[Idx] = (N - 1) - R[Idx];
-    return;
-}
 
 /* Check the symmetries.  Return 0 if this is not the 1st */
 /* solution in the set of equivalent solutions; otherwise */
@@ -462,29 +401,29 @@ int main(int argc, char *argv[])
         printf("Process %d of %d started.\n", myPos, nProc);
         fflush(stdout);
     }
-    if (myPos == 0) // I.e., this is the server/master/host
+    if (myPos == MPI_MATER) // I.e., this is the server/master/host
     {
         int size,
             k;
         FILE *fptr;
         double ClockT, CPU[2], Clock[2], Lapsed,
             *clientTime = (double *)calloc(nProc, sizeof *clientTime);
-
-
+        double start_time, end_time;
+        
+        start_time = wtime();
         puts("Server has entered its part of main");
 
         if (argc < 2)
         {
             //fputs("size:  ", stdout);
             //scanf("%d", &size);
-            size = 14;
+            size = 12;
         }
         else
         {
             size = atoi(argv[1]);
+            printf("\nsize: %d\n", size);
         }
-
-        //getTimes(Clock, CPU);
 
         puts("Server is calling StartQueens.");
 
@@ -492,16 +431,14 @@ int main(int argc, char *argv[])
 
         puts("Server is back from StartQueens.");
 
-        //getTimes(&Clock[1], &CPU[1]);
-        Lapsed = CPU[1] - CPU[0];
-        ClockT = Clock[1] - Clock[0];
-        printf("%22.15lg %22.15lg %22.15lg\n%22.15lg %22.15lg %22.15lg\n",
-               Clock[1], Clock[0], ClockT, CPU[1], CPU[0], Lapsed);
         printf("%3d ==> %10ld  %10ld \n",
                size, Nunique, Ntotal);
-        for (k = 1; k < nProc; k++)
-            printf("%15.7lg", clientTime[k]);
+        // for (k = 1; k < nProc; k++)
+        //     printf("%15.7lg", clientTime[k]);
         putchar('\n');
+        end_time = wtime();
+        
+        printf("\n\tTempo de execução:\t%.6f sec \n", end_time - start_time);
     }
     else // I.e., this is the client/slave/node
         ProcessQueens(myPos);
