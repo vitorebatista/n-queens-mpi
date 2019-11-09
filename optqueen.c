@@ -1,3 +1,5 @@
+// http://penguin.ewu.edu/~trolfe/Queens/OptQueen.html
+
 /* Fully optimized solution to the N-queens problem.
    This implementation removes the flag structure used to time
    the two optimizations (Wirth's O(1) validity check and the
@@ -12,10 +14,8 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <ctype.h>
 #include <string.h>
-#include "cpuTimes.h"
 
 #define FALSE 0
 #define TRUE  1
@@ -266,9 +266,9 @@ main(int argc, char *argv[])
    for (Idx = 0; Idx < Size; Idx++)
       Board[Idx] = Idx;
 
-   getTimes(&ClockStart, &CPUstart);   // Start times.
+   //getTimes(&ClockStart, &CPUstart);   // Start times.
    Nqueens (Board, Trial, Size, 0);
-   getTimes(&Clock, &Lapsed);          // finish times
+   //getTimes(&Clock, &Lapsed);          // finish times
    Lapsed = Lapsed - CPUstart;
    Clock  = Clock  - ClockStart;
 
