@@ -403,14 +403,16 @@ int main(int argc, char *argv[])
     }
     if (myPos == MPI_MATER) // I.e., this is the server/master/host
     {
+        double start_time = wtime();
+        double end_time;
         int size,
             k;
         FILE *fptr;
         double ClockT, CPU[2], Clock[2], Lapsed,
             *clientTime = (double *)calloc(nProc, sizeof *clientTime);
-        double start_time, end_time;
         
-        start_time = wtime();
+        
+        
         puts("Server has entered its part of main");
 
         if (argc < 2)
