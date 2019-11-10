@@ -74,14 +74,32 @@ void Rotate(int R[], int C[], int N, int Neg)
       R[C[Idx++]] = Jdx;
 }
 
-void printBoard(int Board[], int N)
+int cmpfunc (const void * a, const void * b) {
+   return ( *(int*)a - *(int*)b );
+}
+
+void printBoard(int Board[], int N, FILE *file_result)
 {
    int Idx;
+   int result[N];
+
    printf("\tBoard = ");
    for (Idx = 0; Idx < N; Idx++)
       printf("%d ", Board[Idx]);
+   
+   printf(" (");
+   for (Idx = 0; Idx < N; Idx++)
+      result[Idx] = Board[Idx] * N + Idx;
 
-   printf("\n\n");
+   qsort (result, sizeof(result)/sizeof(*result), sizeof(*result),cmpfunc);
+   for (Idx = 0; Idx < N; Idx++){
+      fprintf(file_result, "%d;", result[Idx]);
+      printf("%d;", result[Idx]);
+   }
+
+   fprintf(file_result, "\n");
+   printf(")");
+   printf("\n");
 }
 
 /* Vertical mirror:  reflect each row across the middle */
@@ -106,44 +124,61 @@ int SymmetryOps(
    int Idx;                     /* Loop variable; intncmp result     */
    int Nequiv;                  /* Number equivalent boards          */
    int *Scratch = &Trial[Size]; /* Scratch space          */
-
+   FILE *file_result;
    /* Copy; Trial will be subjected to the transformations   */
    for (Idx = 0; Idx < Size; Idx++)
       Trial[Idx] = Board[Idx];
 
    /* 90 degrees --- clockwise (4th parameter of Rotate is FALSE)*/
-
+   char file_name[14];
+   snprintf(file_name, 14, "solution%d.txt", Size);
+   file_result = fopen(file_name, "a");
+//printf('abrindo');
+   
    Rotate(Trial, Scratch, Size, 0);
    Idx = intncmp(Board, Trial, Size);
-   if (Idx > 0)
+   if (Idx > 0){
+      fclose(file_result);
       return 0;
+   }
    if (Idx == 0)
    { /* No change on 90 degree rotation        */
       Nequiv = 1;
       printf("nequiv = 1 \n ");
-      printBoard(Board, Size);
-      printBoard(Scratch, Size);
+      printBoard(Board, Size, file_result);
+      printBoard(Scratch, Size, file_result);
    }
    else /*  180 degrees */
    {
+      printf("nequiv = 2 - \n");
+      printBoard(Board, Size, file_result);
+      printBoard(Scratch, Size, file_result);
       Rotate(Trial, Scratch, Size, 0);
       Idx = intncmp(Board, Trial, Size);
-      if (Idx > 0)
+      if (Idx > 0){
+         fclose(file_result);
          return 0;
+      }
       if (Idx == 0)
       { /* No change on 180 degree rotation     */
          Nequiv = 2;
-         printf("nequiv = 2 - ");
-         printBoard(Board, Size);
+         
+         printBoard(Board, Size, file_result);
+         printBoard(Scratch, Size, file_result);
       }
       else /* 270 degrees  */
       {
+         printBoard(Board, Size, file_result);
+         printBoard(Scratch, Size, file_result);
          Rotate(Trial, Scratch, Size, 0);
          Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0)
+         if (Idx > 0){
+            fclose(file_result);
             return 0;
-         printf("nequiv = 4 - ");
-         printBoard(Board, Size);
+         }
+         //printf("nequiv = 4 - ");
+         printBoard(Board, Size, file_result);
+         printBoard(Scratch, Size, file_result);
          Nequiv = 4;
       }
    }
@@ -153,29 +188,39 @@ int SymmetryOps(
    /* Reflect -- vertical mirror */
    Vmirror(Trial, Size);
    Idx = intncmp(Board, Trial, Size);
-   if (Idx > 0)
+   if (Idx > 0){
+      fclose(file_result);
       return 0;
+   }
    if (Nequiv > 1) // I.e., no four-fold rotational symmetry
    {
       /* -90 degrees --- equiv. to diagonal mirror */
       Rotate(Trial, Scratch, Size, -1);
       Idx = intncmp(Board, Trial, Size);
-      if (Idx > 0)
+      if (Idx > 0){
+         fclose(file_result);
          return 0;
+      }
       if (Nequiv > 2) // I.e., no two-fold rotational symmetry
       {
          /* -180 degrees --- equiv. to horizontal mirror */
          Rotate(Trial, Scratch, Size, -1);
          Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0)
+         if (Idx > 0){
+            fclose(file_result);
             return 0;
+            }
          /* -270 degrees --- equiv. to anti-diagonal mirror */
          Rotate(Trial, Scratch, Size, -1);
          Idx = intncmp(Board, Trial, Size);
          if (Idx > 0)
+            fclose(file_result);
             return 0;
       }
    }
+
+   //fprintf (fptr, ",%5d\n", 4);
+   fclose(file_result);
    /* WE HAVE A GOOD ONE! */
    return Nequiv * 2;
 }
@@ -295,7 +340,7 @@ int main(int argc, char *argv[])
    int *Board, *Trial, Idx, Size;
    FILE *fptr;
    double Clock, CPUstart, ClockStart, Lapsed;
-
+   char file_name ;
    if (argc < 2)
    {
       fputs("Size:  ", stdout);
@@ -305,6 +350,15 @@ int main(int argc, char *argv[])
    {
       Size = atoi(argv[1]);
    }
+   //char file_name[14];
+   //snprintf(file_name, 14, "solution%d.txt", Size);
+   //int ret = remove(&file_name);
+
+   // if(ret == 0) {
+   //    printf("File deleted successfully");
+   // } else {
+   //    printf("Error: unable to delete the file");
+   // }
 
    Board = (int *)calloc(Size, sizeof *Board);
    Trial = (int *)calloc(Size * 2, sizeof *Board);
