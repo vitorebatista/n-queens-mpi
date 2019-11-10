@@ -1,9 +1,4 @@
-
-double wtime() {
-  struct timeval t;
-  gettimeofday(&t, NULL);
-  return t.tv_sec + (double) t.tv_usec / 1000000;
-}
+#include "time.c"
 
 /* Mark a particular [R][C] board cell as in-use or available     */
 /* Massively used; inline to eliminate the function call overhead */

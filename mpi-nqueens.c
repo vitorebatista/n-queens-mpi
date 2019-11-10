@@ -61,7 +61,9 @@ void StartQueens(int size, double *clientTime)
 
     if (TRACE)
         puts("Server process has entered StartQueens");
+
     MPI_Comm_size(MPI_COMM_WORLD, &nProc);
+
     commBuffer[0] = size;
     // Send initial configurations to all client processes --- or to those
     // needed in case not all are required.
@@ -383,7 +385,7 @@ int main(int argc, char *argv[])
 {
     int nProc,         // Processes in the communicator
         proc;          // loop variable
-    MPI_Status Status; // Return status from MPI
+    //MPI_Status Status; // Return status from MPI
     int rc;            // Status  code from MPI_Xxx() call
     int myPos;         // My own position
 
@@ -401,12 +403,13 @@ int main(int argc, char *argv[])
         printf("Process %d of %d started.\n", myPos, nProc);
         fflush(stdout);
     }
+
     if (myPos == MPI_MATER) // I.e., this is the server/master/host
     {
         double start_time = wtime();
         double end_time;
-        int size,
-            k;
+        int size = 12;
+        int k;
         FILE *fptr;
         double ClockT, CPU[2], Clock[2], Lapsed,
             *clientTime = (double *)calloc(nProc, sizeof *clientTime);
@@ -415,14 +418,8 @@ int main(int argc, char *argv[])
         
         puts("Server has entered its part of main");
 
-        if (argc < 2)
-        {
-            //fputs("size:  ", stdout);
-            //scanf("%d", &size);
-            size = 12;
-        }
-        else
-        {
+        if (argc == 2)
+        {    
             size = atoi(argv[1]);
             printf("\nsize: %d\n", size);
         }
