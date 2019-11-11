@@ -68,6 +68,7 @@ void StartQueens(int size, double *clientTime)
     // needed in case not all are required.
     for (col = 0, proc = 1; proc < nProc && col < limit; proc++, col++)
     {
+        printf("\nproc[%d] col=%d\n\n", proc, col);
         commBuffer[1] = col;
         if (TRACE)
             printf("Sending client %d job %d,%d\n", proc,
