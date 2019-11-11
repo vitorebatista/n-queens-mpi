@@ -20,7 +20,6 @@
 // Zero para o mestre MPI
 #define MPI_MATER 0
 
-
 long int Nunique = 0, // Accumulate results here
     Ntotal = 0;
 
@@ -209,47 +208,48 @@ void ProcessQueens(int myPos)
 /*            And finally, all the Nqueens logic                */
 /****************************************************************/
 
-
 int cmpfunc(const void *a, const void *b)
 {
-   return (*(int *)a - *(int *)b);
+    return (*(int *)a - *(int *)b);
 }
 void printBoard(int Board[], int N, FILE *file_result)
 {
-   int Idx;
-   int result[N];
-   #ifdef DEBUG
-      printf("\tBoard = ");
-      for (Idx = 0; Idx < N; Idx++)
-         printf("%d ", Board[Idx]);
+    int Idx;
+    int result[N];
+#ifdef DEBUG
+    printf("\tBoard = ");
+    for (Idx = 0; Idx < N; Idx++)
+        printf("%d ", Board[Idx]);
 
-      printf(" (");
-   #endif
+    printf(" (");
+#endif
 
-   for (Idx = 0; Idx < N; Idx++)
-      result[Idx] = Board[Idx] * N + Idx;
+    for (Idx = 0; Idx < N; Idx++)
+        result[Idx] = Board[Idx] * N + Idx;
 
-   qsort(result, sizeof(result) / sizeof(*result), sizeof(*result), cmpfunc);
-   for (Idx = 0; Idx < N; Idx++)
-   {
-      fprintf(file_result, "%d;", result[Idx]);
-      #ifdef DEBUG
-         printf("%d;", result[Idx]);
-      #endif
-   }
+    qsort(result, sizeof(result) / sizeof(*result), sizeof(*result), cmpfunc);
+    for (Idx = 0; Idx < N; Idx++)
+    {
+        fprintf(file_result, "%d;", result[Idx]);
+#ifdef DEBUG
+        printf("%d;", result[Idx]);
+#endif
+    }
 
-   fprintf(file_result, "\n");
-   #ifdef DEBUG
-      printf(")");
-      printf("\n");
-   #endif
+    fprintf(file_result, "\n");
+#ifdef DEBUG
+    printf(")");
+    printf("\n");
+#endif
 }
 
-int CopyVector(int R[], int V[], int N, int nList){
-   for (int Idx = 0; Idx < N; Idx++) {
-      R[Idx] = V[Idx];
-   }
-   return ++nList;
+int CopyVector(int R[], int V[], int N, int nList)
+{
+    for (int Idx = 0; Idx < N; Idx++)
+    {
+        R[Idx] = V[Idx];
+    }
+    return ++nList;
 }
 /* Check the symmetries.  Return 0 if this is not the 1st */
 /* solution in the set of equivalent solutions; otherwise */
@@ -260,144 +260,142 @@ int SymmetryOps(
                  /* Holds its own scratch space too!  */
     int Size)    /* Number of cells in a row/column   */
 {
-   int Idx;                     /* Loop variable; intncmp result     */
-   int Nequiv;                  /* Number equivalent boards          */
-   int *Scratch = &Trial[Size]; /* Scratch space          */
-   int **result = (int **)calloc(8, sizeof(int *));
-   int nList = 0;
+    int Idx;                     /* Loop variable; intncmp result     */
+    int Nequiv;                  /* Number equivalent boards          */
+    int *Scratch = &Trial[Size]; /* Scratch space          */
+    int **result = (int **)calloc(8, sizeof(int *));
+    int nList = 0;
 
-   FILE *file_result;
-   /* Copy; Trial will be subjected to the transformations   */
-   for (Idx = 0; Idx < Size; Idx++)
-      Trial[Idx] = Board[Idx];
+    FILE *file_result;
+    /* Copy; Trial will be subjected to the transformations   */
+    for (Idx = 0; Idx < Size; Idx++)
+        Trial[Idx] = Board[Idx];
 
-   for (Idx = 0; Idx < 8; Idx++) {
-      result[Idx] = (int *)calloc(Size, sizeof(int));
-   }
-   /* 90 degrees --- clockwise (4th parameter of Rotate is FALSE)*/
-   char file_name[14];
-   snprintf(file_name, 14, "solution%d.txt", Size);
-   file_result = fopen(file_name, "a");
-   
-   Rotate(Trial, Scratch, Size, 0);
-   Idx = intncmp(Board, Trial, Size);
-   if (Idx > 0)
-   {
-      fclose(file_result);
-      return 0;
-   }
-   if (Idx == 0)
-   { /* No change on 90 degree rotation        */
-      Nequiv = 1;
-      nList = CopyVector(result[nList], Board, Size, nList);
-      nList = CopyVector(result[nList], Scratch, Size, nList);
-   }
-   else /*  180 degrees */
-   {
-      nList = CopyVector(result[nList], Trial, Size, nList); //0
-      nList = CopyVector(result[nList], Board, Size, nList); //1
-      nList = CopyVector(result[nList], Scratch, Size, nList); //2
-      Rotate(Trial, Scratch, Size, 0);
-      Idx = intncmp(Board, Trial, Size);
-      if (Idx > 0)
-      {
-         free(result);
-         fclose(file_result);
-         return 0;
-      }
+    for (Idx = 0; Idx < 8; Idx++)
+    {
+        result[Idx] = (int *)calloc(Size, sizeof(int));
+    }
+    /* 90 degrees --- clockwise (4th parameter of Rotate is FALSE)*/
+    char file_name[14];
+    snprintf(file_name, 14, "solution%d.txt", Size);
+    file_result = fopen(file_name, "a");
 
-      if (Idx == 0)
-      { /* No change on 180 degree rotation     */
-         Nequiv = 2;
-         nList = CopyVector(result[nList], Scratch, Size, nList); //0
-      }
-      else /* 270 degrees  */
-      {
-         
-         nList = CopyVector(result[nList], Trial, Size, nList); //3
-         nList = CopyVector(result[nList], Scratch, Size, nList); //4
-         Rotate(Trial, Scratch, Size, 0);
-
-         Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0)
-         {
+    Rotate(Trial, Scratch, Size, 0);
+    Idx = intncmp(Board, Trial, Size);
+    if (Idx > 0)
+    {
+        fclose(file_result);
+        return 0;
+    }
+    if (Idx == 0)
+    { /* No change on 90 degree rotation        */
+        Nequiv = 1;
+        nList = CopyVector(result[nList], Board, Size, nList);
+        nList = CopyVector(result[nList], Scratch, Size, nList);
+    }
+    else /*  180 degrees */
+    {
+        nList = CopyVector(result[nList], Trial, Size, nList);   //0
+        nList = CopyVector(result[nList], Board, Size, nList);   //1
+        nList = CopyVector(result[nList], Scratch, Size, nList); //2
+        Rotate(Trial, Scratch, Size, 0);
+        Idx = intncmp(Board, Trial, Size);
+        if (Idx > 0)
+        {
             free(result);
             fclose(file_result);
             return 0;
-         }
-         nList = CopyVector(result[nList], Trial, Size, nList); //5
-         nList = CopyVector(result[nList], Scratch, Size, nList); //6
+        }
 
-         Rotate(Trial, Scratch, Size, 0);
-         nList = CopyVector(result[nList], Scratch, Size, nList); //7
-         Nequiv = 4;
-      }
-   }
-   
+        if (Idx == 0)
+        { /* No change on 180 degree rotation     */
+            Nequiv = 2;
+            nList = CopyVector(result[nList], Scratch, Size, nList); //0
+        }
+        else /* 270 degrees  */
+        {
 
-   /* Copy the board into Trial for rotational checks */
-   for (Idx = 0; Idx < Size; Idx++)
-      Trial[Idx] = Board[Idx];
-   /* Reflect -- vertical mirror */
-   
-   Vmirror(Trial, Size);
-   Idx = intncmp(Board, Trial, Size);
-   if (Idx > 0)
-   {
-      free(result);
-      fclose(file_result);
-      return 0;
-   }
-   if (Nequiv > 1) // I.e., no four-fold rotational symmetry
-   {
-      /* -90 degrees --- equiv. to diagonal mirror */
-      Rotate(Trial, Scratch, Size, -1);
-      Idx = intncmp(Board, Trial, Size);
-      if (Idx > 0)
-      {
-         free(result);
-         fclose(file_result);
-         return 0;
-      }
-      if (Nequiv > 2) // I.e., no two-fold rotational symmetry
-      {
-         /* -180 degrees --- equiv. to horizontal mirror */
-         Rotate(Trial, Scratch, Size, -1);
-         Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0)
-         {
+            nList = CopyVector(result[nList], Trial, Size, nList);   //3
+            nList = CopyVector(result[nList], Scratch, Size, nList); //4
+            Rotate(Trial, Scratch, Size, 0);
+
+            Idx = intncmp(Board, Trial, Size);
+            if (Idx > 0)
+            {
+                free(result);
+                fclose(file_result);
+                return 0;
+            }
+            nList = CopyVector(result[nList], Trial, Size, nList);   //5
+            nList = CopyVector(result[nList], Scratch, Size, nList); //6
+
+            Rotate(Trial, Scratch, Size, 0);
+            nList = CopyVector(result[nList], Scratch, Size, nList); //7
+            Nequiv = 4;
+        }
+    }
+
+    /* Copy the board into Trial for rotational checks */
+    for (Idx = 0; Idx < Size; Idx++)
+        Trial[Idx] = Board[Idx];
+    /* Reflect -- vertical mirror */
+
+    Vmirror(Trial, Size);
+    Idx = intncmp(Board, Trial, Size);
+    if (Idx > 0)
+    {
+        free(result);
+        fclose(file_result);
+        return 0;
+    }
+    if (Nequiv > 1) // I.e., no four-fold rotational symmetry
+    {
+        /* -90 degrees --- equiv. to diagonal mirror */
+        Rotate(Trial, Scratch, Size, -1);
+        Idx = intncmp(Board, Trial, Size);
+        if (Idx > 0)
+        {
             free(result);
             fclose(file_result);
             return 0;
-         }
-         /* -270 degrees --- equiv. to anti-diagonal mirror */
-         Rotate(Trial, Scratch, Size, -1);
-         Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0)
-         {
-            free(result);
-            fclose(file_result);
-            return 0;
-         }
-         
-         
-      }
-   }
+        }
+        if (Nequiv > 2) // I.e., no two-fold rotational symmetry
+        {
+            /* -180 degrees --- equiv. to horizontal mirror */
+            Rotate(Trial, Scratch, Size, -1);
+            Idx = intncmp(Board, Trial, Size);
+            if (Idx > 0)
+            {
+                free(result);
+                fclose(file_result);
+                return 0;
+            }
+            /* -270 degrees --- equiv. to anti-diagonal mirror */
+            Rotate(Trial, Scratch, Size, -1);
+            Idx = intncmp(Board, Trial, Size);
+            if (Idx > 0)
+            {
+                free(result);
+                fclose(file_result);
+                return 0;
+            }
+        }
+    }
 
-   // printf("\nresultado final:\n");
-   for (int n = 0; n < 8; n++)
-   {
-      if (result[n] && result[n][0] != result[n][1])
-      {
-         //printf("[%d] ",n);
-         printBoard(result[n], Size, file_result);
-      }
-   }
-   // printf("Quantidade=%d\n", Nequiv * 2);
+    // printf("\nresultado final:\n");
+    for (int n = 0; n < 8; n++)
+    {
+        if (result[n] && result[n][0] != result[n][1])
+        {
+            //printf("[%d] ",n);
+            printBoard(result[n], Size, file_result);
+        }
+    }
+    // printf("Quantidade=%d\n", Nequiv * 2);
 
-   free(result);
-   fclose(file_result);
-   return Nequiv * 2;
+    free(result);
+    fclose(file_result);
+    return Nequiv * 2;
 }
 
 /* Test the validity of this particular partial board.            */
@@ -473,11 +471,11 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
 
 int main(int argc, char *argv[])
 {
-    int nProc,         // Processes in the communicator
-        proc;          // loop variable
+    int nProc, // Processes in the communicator
+        proc;  // loop variable
     //MPI_Status Status; // Return status from MPI
-    int rc;            // Status  code from MPI_Xxx() call
-    int myPos;         // My own position
+    int rc;    // Status  code from MPI_Xxx() call
+    int myPos; // My own position
 
     rc = MPI_Init(&argc, &argv);
     if (rc != MPI_SUCCESS)
@@ -503,13 +501,11 @@ int main(int argc, char *argv[])
         FILE *fptr;
         double ClockT, CPU[2], Clock[2], Lapsed,
             *clientTime = (double *)calloc(nProc, sizeof *clientTime);
-        
-        
-        
+
         puts("Server has entered its part of main");
 
         if (argc == 2)
-        {    
+        {
             size = atoi(argv[1]);
             printf("\nsize: %d\n", size);
         }
@@ -526,7 +522,7 @@ int main(int argc, char *argv[])
         //     printf("%15.7lg", clientTime[k]);
         putchar('\n');
         end_time = wtime();
-        
+
         printf("\n\tTempo de execução:\t%.6f sec \n", end_time - start_time);
     }
     else // I.e., this is the client/slave/node

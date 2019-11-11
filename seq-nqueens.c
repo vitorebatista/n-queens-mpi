@@ -28,7 +28,7 @@
    solve: 4 2 0 3 1 [6]
    */
 
-  /*
+/*
 [0]     Board = 4 1 3 0 2  (3;6;14;17;20;)
 [1]     Board = 0 2 4 1 3  (0;8;11;19;22;)
 [2]     Board = 3 1 4 2 0  (4;6;13;15;22;)
@@ -128,17 +128,25 @@ int cmpfunc(const void *a, const void *b)
    return (*(int *)a - *(int *)b);
 }
 
-void printBoard(int Board[], int N, FILE *file_result)
+void printBoard(int Board[], int N)
+{
+   printf("Board = ");
+   for (int Idx = 0; Idx < N; Idx++)
+      printf("%d ", Board[Idx]);
+
+   printf("\n");
+}
+void writeBoard(int Board[], int N, FILE *file_result)
 {
    int Idx;
    int result[N];
-   #ifdef DEBUG
-      printf("\tBoard = ");
-      for (Idx = 0; Idx < N; Idx++)
-         printf("%d ", Board[Idx]);
+#ifdef DEBUG
+   printf("\tBoard = ");
+   for (Idx = 0; Idx < N; Idx++)
+      printf("%d ", Board[Idx]);
 
-      printf(" (");
-   #endif
+   printf(" (");
+#endif
 
    for (Idx = 0; Idx < N; Idx++)
       result[Idx] = Board[Idx] * N + Idx;
@@ -147,16 +155,16 @@ void printBoard(int Board[], int N, FILE *file_result)
    for (Idx = 0; Idx < N; Idx++)
    {
       fprintf(file_result, "%d;", result[Idx]);
-      #ifdef DEBUG
-         printf("%d;", result[Idx]);
-      #endif
+#ifdef DEBUG
+      printf("%d;", result[Idx]);
+#endif
    }
 
    fprintf(file_result, "\n");
-   #ifdef DEBUG
-      printf(")");
-      printf("\n");
-   #endif
+#ifdef DEBUG
+   printf(")");
+   printf("\n");
+#endif
 }
 
 /* Vertical mirror:  reflect each row across the middle */
@@ -168,8 +176,10 @@ void Vmirror(int R[], int N)
       R[Idx] = (N - 1) - R[Idx];
    return;
 }
-int CopyVector(int R[], int V[], int N, int nList){
-   for (int Idx = 0; Idx < N; Idx++) {
+int CopyVector(int R[], int V[], int N, int nList)
+{
+   for (int Idx = 0; Idx < N; Idx++)
+   {
       R[Idx] = V[Idx];
    }
    return ++nList;
@@ -194,14 +204,15 @@ int SymmetryOps(
    for (Idx = 0; Idx < Size; Idx++)
       Trial[Idx] = Board[Idx];
 
-   for (Idx = 0; Idx < 8; Idx++) {
+   for (Idx = 0; Idx < 8; Idx++)
+   {
       result[Idx] = (int *)calloc(Size, sizeof(int));
    }
    /* 90 degrees --- clockwise (4th parameter of Rotate is FALSE)*/
    char file_name[14];
    snprintf(file_name, 14, "solution%d.txt", Size);
    file_result = fopen(file_name, "a");
-   
+
    Rotate(Trial, Scratch, Size, 0);
    Idx = intncmp(Board, Trial, Size);
    if (Idx > 0)
@@ -217,8 +228,8 @@ int SymmetryOps(
    }
    else /*  180 degrees */
    {
-      nList = CopyVector(result[nList], Trial, Size, nList); //0
-      nList = CopyVector(result[nList], Board, Size, nList); //1
+      nList = CopyVector(result[nList], Trial, Size, nList);   //0
+      nList = CopyVector(result[nList], Board, Size, nList);   //1
       nList = CopyVector(result[nList], Scratch, Size, nList); //2
       Rotate(Trial, Scratch, Size, 0);
       Idx = intncmp(Board, Trial, Size);
@@ -236,8 +247,8 @@ int SymmetryOps(
       }
       else /* 270 degrees  */
       {
-         
-         nList = CopyVector(result[nList], Trial, Size, nList); //3
+
+         nList = CopyVector(result[nList], Trial, Size, nList);   //3
          nList = CopyVector(result[nList], Scratch, Size, nList); //4
          Rotate(Trial, Scratch, Size, 0);
 
@@ -248,7 +259,7 @@ int SymmetryOps(
             fclose(file_result);
             return 0;
          }
-         nList = CopyVector(result[nList], Trial, Size, nList); //5
+         nList = CopyVector(result[nList], Trial, Size, nList);   //5
          nList = CopyVector(result[nList], Scratch, Size, nList); //6
 
          Rotate(Trial, Scratch, Size, 0);
@@ -256,13 +267,12 @@ int SymmetryOps(
          Nequiv = 4;
       }
    }
-   
 
    /* Copy the board into Trial for rotational checks */
    for (Idx = 0; Idx < Size; Idx++)
       Trial[Idx] = Board[Idx];
    /* Reflect -- vertical mirror */
-   
+
    Vmirror(Trial, Size);
    Idx = intncmp(Board, Trial, Size);
    if (Idx > 0)
@@ -302,8 +312,6 @@ int SymmetryOps(
             fclose(file_result);
             return 0;
          }
-         
-         
       }
    }
 
@@ -313,7 +321,7 @@ int SymmetryOps(
       if (result[n] && result[n][0] != result[n][1])
       {
          //printf("[%d] ",n);
-         printBoard(result[n], Size, file_result);
+         writeBoard(result[n], Size, file_result);
       }
    }
    // printf("Quantidade=%d\n", Nequiv * 2);
@@ -390,9 +398,18 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
    {
       if (Valid(Board, Size, Row, Diag, AntiD))
       {
+
          Mark(Row, Board[Row], Size, Diag, AntiD, TRUE);
+         // printf("row[%d] ", Row + 1);
+         // printBoard(Board, Size);
          Nqueens(Board, Trial, Size, Row + 1);
+         //printBoard(Board, Size);
          Mark(Row, Board[Row], Size, Diag, AntiD, FALSE);
+         // printf("\n");
+      }
+      else
+      {
+         // printf("saiu valid\n");
       }
       /*    Rejection of vertical mirror images means that row zero */
       /*    only needs to be processed to the middle.               */
@@ -405,8 +422,15 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
          if (Valid(Board, Size, Row, Diag, AntiD))
          {
             Mark(Row, Board[Row], Size, Diag, AntiD, TRUE);
+            // printf("row[%d] ", Row + 1);
+            // printBoard(Board, Size);
             Nqueens(Board, Trial, Size, Row + 1);
             Mark(Row, Board[Row], Size, Diag, AntiD, FALSE);
+            // printf("\n");
+         }
+         else
+         {
+            // printf("saiu valid\n");
          }
       }
       /*    Regenerate original vector from Row to Size-1:  */
@@ -460,7 +484,8 @@ int main(int argc, char *argv[])
    for (Idx = 0; Idx < Size; Idx++)
       Board[Idx] = Idx;
 
-   //printBoard(Board, Size);
+   // printf("row[%d] ", 0);
+   // printBoard(Board, Size);
    Nqueens(Board, Trial, Size, 0);
 
    printf("%3d ==> %10ld  %10ld \n",
