@@ -1,3 +1,4 @@
+// http://penguin.ewu.edu/~trolfe/SCCS-95/index.html
 // http://penguin.ewu.edu/~trolfe/Queens/OptQueen.html
 
 /* Fully optimized solution to the N-queens problem.
@@ -12,6 +13,54 @@
    Author:    Timothy J. Rolfe
    Language:  C
 */
+
+/*
+   N = 5
+   solve: 0 2 4 1 3 [1]
+   solve: 0 3 1 4 2 [7]
+   solve: 1 3 0 2 4 [3]
+   solve: 1 4 2 0 3 [8]
+   solve: 2 0 3 1 4 [4]
+   solve: 2 4 1 3 0 [5]
+   solve: 3 0 2 4 1 [9]
+   solve: 3 1 4 2 0 [2]
+   solve: 4 1 3 0 2 [0]
+   solve: 4 2 0 3 1 [6]
+   */
+
+  /*
+[0]     Board = 4 1 3 0 2  (3;6;14;17;20;)
+[1]     Board = 0 2 4 1 3  (0;8;11;19;22;)
+[2]     Board = 3 1 4 2 0  (4;6;13;15;22;)
+[3]     Board = 1 3 0 2 4  (2;5;13;16;24;)
+[4]     Board = 2 0 3 1 4  (1;8;10;17;24;)
+[5]     Board = 2 4 1 3 0  (4;7;10;18;21;)
+[6]     Board = 4 2 0 3 1  (2;9;11;18;20;)
+[7]     Board = 0 3 1 4 2  (0;7;14;16;23;)
+[8]     Board = 1 4 2 0 3  (3;5;12;19;21;)
+[9]     Board = 3 0 2 4 1  (1;9;12;15;23;)
+
+N=6
+Moodle
+[3] 1;9;17;18;26;34;
+[2] 2;11;13;22;24;33;
+[1] 3;6;16;19;29;32;
+[0] 4;8;12;23;27;31;
+
+Brute Force
+solve: 1 3 5 0 2 4 
+solve: 2 5 1 4 0 3 
+solve: 3 0 4 1 5 2 
+solve: 4 2 0 5 3 1 
+
+Optimized
+[0]     Board = 2 5 1 4 0 3  (4;8;12;23;27;31;)
+[1]     Board = 1 3 5 0 2 4  (3;6;16;19;29;32;)
+[2]     Board = 4 2 0 5 3 1  (2;11;13;22;24;33;)
+[3]     Board = 3 0 4 1 5 2  (1;9;17;18;26;34;)
+  
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -74,32 +123,40 @@ void Rotate(int R[], int C[], int N, int Neg)
       R[C[Idx++]] = Jdx;
 }
 
-int cmpfunc (const void * a, const void * b) {
-   return ( *(int*)a - *(int*)b );
+int cmpfunc(const void *a, const void *b)
+{
+   return (*(int *)a - *(int *)b);
 }
 
 void printBoard(int Board[], int N, FILE *file_result)
 {
    int Idx;
    int result[N];
+   #ifdef DEBUG
+      printf("\tBoard = ");
+      for (Idx = 0; Idx < N; Idx++)
+         printf("%d ", Board[Idx]);
 
-   printf("\tBoard = ");
-   for (Idx = 0; Idx < N; Idx++)
-      printf("%d ", Board[Idx]);
-   
-   printf(" (");
+      printf(" (");
+   #endif
+
    for (Idx = 0; Idx < N; Idx++)
       result[Idx] = Board[Idx] * N + Idx;
 
-   qsort (result, sizeof(result)/sizeof(*result), sizeof(*result),cmpfunc);
-   for (Idx = 0; Idx < N; Idx++){
+   qsort(result, sizeof(result) / sizeof(*result), sizeof(*result), cmpfunc);
+   for (Idx = 0; Idx < N; Idx++)
+   {
       fprintf(file_result, "%d;", result[Idx]);
-      printf("%d;", result[Idx]);
+      #ifdef DEBUG
+         printf("%d;", result[Idx]);
+      #endif
    }
 
    fprintf(file_result, "\n");
-   printf(")");
-   printf("\n");
+   #ifdef DEBUG
+      printf(")");
+      printf("\n");
+   #endif
 }
 
 /* Vertical mirror:  reflect each row across the middle */
@@ -111,7 +168,12 @@ void Vmirror(int R[], int N)
       R[Idx] = (N - 1) - R[Idx];
    return;
 }
-
+int CopyVector(int R[], int V[], int N, int nList){
+   for (int Idx = 0; Idx < N; Idx++) {
+      R[Idx] = V[Idx];
+   }
+   return ++nList;
+}
 /* Check the symmetries.  Return 0 if this is not the 1st */
 /* solution in the set of equivalent solutions; otherwise */
 /* return the number of equivalent solutions.             */
@@ -124,71 +186,88 @@ int SymmetryOps(
    int Idx;                     /* Loop variable; intncmp result     */
    int Nequiv;                  /* Number equivalent boards          */
    int *Scratch = &Trial[Size]; /* Scratch space          */
+   int **result = (int **)calloc(8, sizeof(int *));
+   int nList = 0;
+
    FILE *file_result;
    /* Copy; Trial will be subjected to the transformations   */
    for (Idx = 0; Idx < Size; Idx++)
       Trial[Idx] = Board[Idx];
 
+   for (Idx = 0; Idx < 8; Idx++) {
+      result[Idx] = (int *)calloc(Size, sizeof(int));
+   }
    /* 90 degrees --- clockwise (4th parameter of Rotate is FALSE)*/
    char file_name[14];
    snprintf(file_name, 14, "solution%d.txt", Size);
    file_result = fopen(file_name, "a");
-//printf('abrindo');
    
    Rotate(Trial, Scratch, Size, 0);
    Idx = intncmp(Board, Trial, Size);
-   if (Idx > 0){
+   if (Idx > 0)
+   {
       fclose(file_result);
       return 0;
    }
    if (Idx == 0)
    { /* No change on 90 degree rotation        */
       Nequiv = 1;
-      printf("nequiv = 1 \n ");
-      printBoard(Board, Size, file_result);
-      printBoard(Scratch, Size, file_result);
+      nList = CopyVector(result[nList], Board, Size, nList);
+      nList = CopyVector(result[nList], Scratch, Size, nList);
    }
    else /*  180 degrees */
    {
-      printf("nequiv = 2 - \n");
-      printBoard(Board, Size, file_result);
-      printBoard(Scratch, Size, file_result);
+      nList = CopyVector(result[nList], Trial, Size, nList); //0
+      nList = CopyVector(result[nList], Board, Size, nList); //1
+      nList = CopyVector(result[nList], Scratch, Size, nList); //2
       Rotate(Trial, Scratch, Size, 0);
       Idx = intncmp(Board, Trial, Size);
-      if (Idx > 0){
+      if (Idx > 0)
+      {
+         free(result);
          fclose(file_result);
          return 0;
       }
+
       if (Idx == 0)
       { /* No change on 180 degree rotation     */
          Nequiv = 2;
-         
-         printBoard(Board, Size, file_result);
-         printBoard(Scratch, Size, file_result);
+         nList = CopyVector(result[nList], Scratch, Size, nList); //0
       }
       else /* 270 degrees  */
       {
-         printBoard(Board, Size, file_result);
-         printBoard(Scratch, Size, file_result);
+         
+         nList = CopyVector(result[nList], Trial, Size, nList); //3
+         nList = CopyVector(result[nList], Scratch, Size, nList); //4
          Rotate(Trial, Scratch, Size, 0);
+
          Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0){
+         if (Idx > 0)
+         {
+            free(result);
             fclose(file_result);
             return 0;
          }
-         //printf("nequiv = 4 - ");
-         printBoard(Board, Size, file_result);
-         printBoard(Scratch, Size, file_result);
+         nList = CopyVector(result[nList], Trial, Size, nList); //5
+         nList = CopyVector(result[nList], Scratch, Size, nList); //6
+
+         Rotate(Trial, Scratch, Size, 0);
+         nList = CopyVector(result[nList], Scratch, Size, nList); //7
          Nequiv = 4;
       }
    }
+   
+
    /* Copy the board into Trial for rotational checks */
    for (Idx = 0; Idx < Size; Idx++)
       Trial[Idx] = Board[Idx];
    /* Reflect -- vertical mirror */
+   
    Vmirror(Trial, Size);
    Idx = intncmp(Board, Trial, Size);
-   if (Idx > 0){
+   if (Idx > 0)
+   {
+      free(result);
       fclose(file_result);
       return 0;
    }
@@ -197,7 +276,9 @@ int SymmetryOps(
       /* -90 degrees --- equiv. to diagonal mirror */
       Rotate(Trial, Scratch, Size, -1);
       Idx = intncmp(Board, Trial, Size);
-      if (Idx > 0){
+      if (Idx > 0)
+      {
+         free(result);
          fclose(file_result);
          return 0;
       }
@@ -206,22 +287,39 @@ int SymmetryOps(
          /* -180 degrees --- equiv. to horizontal mirror */
          Rotate(Trial, Scratch, Size, -1);
          Idx = intncmp(Board, Trial, Size);
-         if (Idx > 0){
+         if (Idx > 0)
+         {
+            free(result);
             fclose(file_result);
             return 0;
-            }
+         }
          /* -270 degrees --- equiv. to anti-diagonal mirror */
          Rotate(Trial, Scratch, Size, -1);
          Idx = intncmp(Board, Trial, Size);
          if (Idx > 0)
+         {
+            free(result);
             fclose(file_result);
             return 0;
+         }
+         
+         
       }
    }
 
-   //fprintf (fptr, ",%5d\n", 4);
+   // printf("\nresultado final:\n");
+   for (int n = 0; n < 8; n++)
+   {
+      if (result[n] && result[n][0] != result[n][1])
+      {
+         //printf("[%d] ",n);
+         printBoard(result[n], Size, file_result);
+      }
+   }
+   // printf("Quantidade=%d\n", Nequiv * 2);
+
+   free(result);
    fclose(file_result);
-   /* WE HAVE A GOOD ONE! */
    return Nequiv * 2;
 }
 
@@ -325,7 +423,6 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
       Idx = SymmetryOps(Board, Trial, Size);
       if (Idx)
       {
-         printf("idx=%d\n", Idx);
          Nunique++;
          Ntotal += Idx;
       }
@@ -340,7 +437,7 @@ int main(int argc, char *argv[])
    int *Board, *Trial, Idx, Size;
    FILE *fptr;
    double Clock, CPUstart, ClockStart, Lapsed;
-   char file_name ;
+
    if (argc < 2)
    {
       fputs("Size:  ", stdout);
@@ -350,15 +447,12 @@ int main(int argc, char *argv[])
    {
       Size = atoi(argv[1]);
    }
-   //char file_name[14];
-   //snprintf(file_name, 14, "solution%d.txt", Size);
-   //int ret = remove(&file_name);
+   char file_name[14];
+   snprintf(file_name, 14, "solution%d.txt", Size);
+   int ret = remove(file_name);
 
-   // if(ret == 0) {
-   //    printf("File deleted successfully");
-   // } else {
-   //    printf("Error: unable to delete the file");
-   // }
+   if (ret == 0)
+      printf("File deleted successfully\n");
 
    Board = (int *)calloc(Size, sizeof *Board);
    Trial = (int *)calloc(Size * 2, sizeof *Board);
@@ -380,7 +474,6 @@ int main(int argc, char *argv[])
    fprintf(fptr, "%3d,%10ld,%10ld,%10.4f\n",
            Size, Nunique, Ntotal, total_time);
 
-   //fprintf (fptr, ",%5d\n", 4);
    fclose(fptr);
 
    return 0;

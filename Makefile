@@ -1,7 +1,7 @@
 # GNU Makefile
 
 CC = mpicc
-CCFLAGS = -Wall
+CCFLAGS = -Wall -O3
 #CCFLAGS =
 LDFLAGS =
 #LDFLAGS = -llmpe -lmpe
@@ -13,7 +13,7 @@ TARGET = mpi-nqueens seq-nqueens help
 #%: %.o
 #	$(CC) $^ -o $@
 
-all: $(TARGET)
+all: $(TARGET) -d
 
 help:
 	@echo
