@@ -67,32 +67,6 @@ Optimized
 #include <string.h>
 #include "util.c"
 
-#define FALSE 0
-#define TRUE 1
-
-long int Nunique = 0,
-         Ntotal = 0;
-
-/* Maintenance procedure:  print a picture of the board. */
-void Picture(int Image[], int Size)
-{
-   int Row, Col, Tst;
-
-   for (Row = 0; Row < Size; Row++)
-   {
-      putchar('\n');
-      Tst = Image[Row];
-      for (Col = 0; Col < Size; Col++)
-      {
-         putchar(' ');
-         putchar(Col == Tst ? 'Q' : '.');
-      }
-   }
-   putchar('\n');
-   putchar('\n');
-}
-
-
 int main(int argc, char *argv[])
 {
    double start_time = wtime();
