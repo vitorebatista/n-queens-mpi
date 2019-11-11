@@ -208,49 +208,6 @@ void ProcessQueens(int myPos)
 /*            And finally, all the Nqueens logic                */
 /****************************************************************/
 
-int cmpfunc(const void *a, const void *b)
-{
-    return (*(int *)a - *(int *)b);
-}
-void printBoard(int Board[], int N, FILE *file_result)
-{
-    int Idx;
-    int result[N];
-#ifdef DEBUG
-    printf("\tBoard = ");
-    for (Idx = 0; Idx < N; Idx++)
-        printf("%d ", Board[Idx]);
-
-    printf(" (");
-#endif
-
-    for (Idx = 0; Idx < N; Idx++)
-        result[Idx] = Board[Idx] * N + Idx;
-
-    qsort(result, sizeof(result) / sizeof(*result), sizeof(*result), cmpfunc);
-    for (Idx = 0; Idx < N; Idx++)
-    {
-        fprintf(file_result, "%d;", result[Idx]);
-#ifdef DEBUG
-        printf("%d;", result[Idx]);
-#endif
-    }
-
-    fprintf(file_result, "\n");
-#ifdef DEBUG
-    printf(")");
-    printf("\n");
-#endif
-}
-
-int CopyVector(int R[], int V[], int N, int nList)
-{
-    for (int Idx = 0; Idx < N; Idx++)
-    {
-        R[Idx] = V[Idx];
-    }
-    return ++nList;
-}
 /* Check the symmetries.  Return 0 if this is not the 1st */
 /* solution in the set of equivalent solutions; otherwise */
 /* return the number of equivalent solutions.             */
@@ -388,7 +345,7 @@ int SymmetryOps(
         if (result[n] && result[n][0] != result[n][1])
         {
             //printf("[%d] ",n);
-            printBoard(result[n], Size, file_result);
+            writeBoard(result[n], Size, file_result);
         }
     }
     // printf("Quantidade=%d\n", Nequiv * 2);
@@ -397,27 +354,6 @@ int SymmetryOps(
     fclose(file_result);
     return Nequiv * 2;
 }
-
-/* Test the validity of this particular partial board.            */
-/* Massively used; inline to eliminate the function call overhead */
-/*
-inline int Valid (int Board[], int Size, int Row,
-                  short Diag[], short AntiD[] )
-{
-   int Idx;        // Index into Diag[] / AntiD[]
-   int Chk;        // Occupied flag
-
-// Diagonal:  Row-Col == constant
-   Idx = Row - Board[Row] + Size-1;
-   Chk = Diag[Idx];
-// AntiDiagonal:  Row+Col == constant
-   Idx = Row + Board[Row];
-   Chk = Chk || AntiD[Idx];
-   return !Chk;    // Valid if NOT any occupied
-}
- --- for straight C, make a #define macro   */
-#define Valid(Board, Size, Row, Diag, AntiD) \
-    !(Diag[Row - Board[Row] + Size - 1] || AntiD[Row + Board[Row]])
 
 /* Process the partial (or complete) board for the indicated Row */
 void Nqueens(int Board[], int Trial[], int Size, int Row)
