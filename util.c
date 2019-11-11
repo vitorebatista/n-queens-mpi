@@ -1,6 +1,7 @@
 #include "time.c"
 // https://en.wikipedia.org/wiki/Eight_queens_puzzle
 
+/* Copy the vector to another vector */
 int CopyVector(int R[], int V[], int N, int nList)
 {
     for (int Idx = 0; Idx < N; Idx++)
@@ -9,6 +10,7 @@ int CopyVector(int R[], int V[], int N, int nList)
     }
     return ++nList;
 }
+/* Function to compare to order a vector using by qsort func */
 int cmpfunc(const void *a, const void *b)
 {
     return (*(int *)a - *(int *)b);
@@ -21,6 +23,8 @@ void printBoard(int Board[], int N)
 
     printf(" (");
 }
+
+/* Write the board result to a text file (solution<n>.txt */
 void writeBoard(int Board[], int N, FILE *file_result)
 {
     int Idx;
@@ -120,6 +124,14 @@ int intncmp(int L[], int R[], int N)
 
 
 /* Rotate +90 or -90: */
+/*
+Original                      90 degree rotation
+  1  .  .  .  .                 .  .  .  .  1
+  .  .  2  .  .                 .  4  .  .  .
+  .  .  .  .  3                 .  .  .  2  .
+  .  4  .  .  .                 5  .  .  .  .
+  .  .  .  5  .                 .  .  3  .  .
+*/
 void Rotate(int R[], int C[], int N, int Neg)
 {
    int Idx, Jdx;
@@ -133,6 +145,14 @@ void Rotate(int R[], int C[], int N, int Neg)
 }
 
 /* Vertical mirror:  reflect each row across the middle */
+/*
+Original                       Vertical mirror
+  1  .  .  .  .                  .  .  .  .  1
+  .  .  2  .  .                  .  .  2  .  .
+  .  .  .  .  3                  3  .  .  .  .
+  .  4  .  .  .                  .  .  .  4  .
+  .  .  .  5  .                  .  5  .  .  .
+*/
 void Vmirror(int R[], int N)
 {
     int Idx;
