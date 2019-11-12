@@ -28,4 +28,5 @@ clean:
 	rm -f *.o *~ $(TARGET)
 
 run:
-	mpirun -np 8 --hostfile mp -mca btl ^openib  -mca orte_base_help_aggregate 0 ./mpiqueen	16
+	mpirun -np 2 --hostfile mp -mca btl ^openib  -mca orte_base_help_aggregate 0 ./mpi-nqueens	16
+	

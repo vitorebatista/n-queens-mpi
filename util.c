@@ -2,8 +2,8 @@
 // https://en.wikipedia.org/wiki/Eight_queens_puzzle
 
 
-long int Nunique = 0, // Accumulate results here
-    Ntotal = 0;
+long int total_unique = 0, // Accumulate results here
+    total_all = 0;
 
 // These need to be modified outside of Nqueens
 short *Diag = NULL, *AntiD = NULL;
@@ -197,18 +197,19 @@ void Vmirror(int R[], int N)
 }
 
 
-/* Check the symmetries.  Return 0 if this is not the 1st */
-/* solution in the set of equivalent solutions; otherwise */
-/* return the number of equivalent solutions.             */
+/* Verifique as simetrias. Retorne 0 se este não for o primeiro */
+/* solução no conjunto de soluções equivalentes; de outra forma */
+/* retornar o número de soluções equivalentes.                  */
 int SymmetryOps(
-    int Board[], /* The fully-populated board         */
-    int Trial[], /* Used for symmetry checks          */
-                 /* Holds its own scratch space too!  */
-    int Size)    /* Number of cells in a row/column   */
+    int Board[], /* O painel totalmente preenchido                 */
+    int Trial[], /* Usado para verificações de simetria            */
+                 /* Possui seu próprio espaço de trabalho também!  */
+    int Size,    /* Número de células em uma linha / coluna        */
+    int Process) /* */
 {
-    int Idx;                     /* Loop variable; intncmp result     */
-    int Nequiv;                  /* Number equivalent boards          */
-    int *Scratch = &Trial[Size]; /* Scratch space          */
+    int Idx;                     
+    int Nequiv;                  /* Número de equivalentes          */
+    int *Scratch = &Trial[Size]; 
     int **result = (int **)calloc(8, sizeof(int *));
     int nList = 0;
 
@@ -222,8 +223,9 @@ int SymmetryOps(
         result[Idx] = (int *)calloc(Size, sizeof(int));
     }
     /* 90 degrees --- clockwise (4th parameter of Rotate is FALSE)*/
-    char file_name[14];
-    snprintf(file_name, 14, "solution%d.txt", Size);
+    char file_name[24];
+    
+    snprintf(file_name, 24, "solution%d_%d.txt", Size, Process);
     file_result = fopen(file_name, "a");
 
     Rotate(Trial, Scratch, Size, 0);
@@ -345,7 +347,7 @@ int SymmetryOps(
 }
 
 /* Process the partial (or complete) board for the indicated Row */
-void Nqueens(int Board[], int Trial[], int Size, int Row)
+void Nqueens(int Board[], int Trial[], int Size, int Row, int Process)
 {
     int Idx, Lim, Vtemp;
 /* If the first call, allocate the boolean arrays Diag and AntiD */
@@ -366,7 +368,7 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
         if (Valid(Board, Size, Row, Diag, AntiD))
         {
             Mark(Row, Board[Row], Size, Diag, AntiD, TRUE);
-            Nqueens(Board, Trial, Size, Row + 1);
+            Nqueens(Board, Trial, Size, Row + 1, Process);
             Mark(Row, Board[Row], Size, Diag, AntiD, FALSE);
         }
         /*    Rejection of vertical mirror images means that row zero */
@@ -380,7 +382,7 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
             if (Valid(Board, Size, Row, Diag, AntiD))
             {
                 Mark(Row, Board[Row], Size, Diag, AntiD, TRUE);
-                Nqueens(Board, Trial, Size, Row + 1);
+                Nqueens(Board, Trial, Size, Row + 1, Process);
                 Mark(Row, Board[Row], Size, Diag, AntiD, FALSE);
             }
         }
@@ -395,11 +397,11 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
     {
         if (!Valid(Board, Size, Row, Diag, AntiD))
             return;
-        Idx = SymmetryOps(Board, Trial, Size);
+        Idx = SymmetryOps(Board, Trial, Size, Process);
         if (Idx)
         {
-            Nunique++;
-            Ntotal += Idx;
+            total_unique++;
+            total_all += Idx;
         }
     }
     return;

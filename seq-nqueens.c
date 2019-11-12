@@ -1,18 +1,58 @@
-// http://penguin.ewu.edu/~trolfe/SCCS-95/index.html
-// http://penguin.ewu.edu/~trolfe/Queens/OptQueen.html
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include "util.c"
 
-/* Fully optimized solution to the N-queens problem.
-   This implementation removes the flag structure used to time
-   the two optimizations (Wirth's O(1) validity check and the
-   use of permutation vectors).  It also uses the C++ option of
-   declaring a function as inline for the two functions most
-   heavily used:
-      Mark  --- here modified to do both Mark and Unmark
-      Valid --- the check of the diagonal attacks
+int main(int argc, char *argv[])
+{
+   double start_time = wtime();
+   double end_time, total_time;
+   int *Board, *Trial, Idx, Size;
+   FILE *fptr;
+   double Clock, CPUstart, ClockStart, Lapsed;
 
-   Author:    Timothy J. Rolfe
-   Language:  C
-*/
+   if (argc < 2)
+   {
+      fputs("Size:  ", stdout);
+      scanf("%d", &Size);
+   }
+   else
+   {
+      Size = atoi(argv[1]);
+   }
+   char file_name[14];
+   snprintf(file_name, 14, "solution%d.txt", Size);
+   int ret = remove(file_name);
+
+   if (ret == 0)
+      printf("File deleted successfully\n");
+
+   Board = (int *)calloc(Size, sizeof *Board);
+   Trial = (int *)calloc(Size * 2, sizeof *Board);
+   /* Initial permutation generated. */
+   for (Idx = 0; Idx < Size; Idx++)
+      Board[Idx] = Idx;
+
+   // printf("row[%d] ", 0);
+   // printBoard(Board, Size);
+   Nqueens(Board, Trial, Size, 0, 0);
+
+   printf("%3d ==> %10ld  %10ld \n",
+          Size, total_unique, total_all);
+   end_time = wtime();
+   total_time = end_time - start_time;
+   printf("\nTempo de execução:\t%.6f sec \n", total_time);
+
+   fptr = fopen("time-seq-nqueens.csv", "a");
+
+   fprintf(fptr, "%3d,%10ld,%10ld,%10.4f\n",
+           Size, total_unique, total_all, total_time);
+
+   fclose(fptr);
+
+   return 0;
+}
 
 /*
    N = 5
@@ -60,59 +100,3 @@ Optimized
 [3]     Board = 3 0 4 1 5 2  (1;9;17;18;26;34;)
   
 */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include "util.c"
-
-int main(int argc, char *argv[])
-{
-   double start_time = wtime();
-   double end_time, total_time;
-   int *Board, *Trial, Idx, Size;
-   FILE *fptr;
-   double Clock, CPUstart, ClockStart, Lapsed;
-
-   if (argc < 2)
-   {
-      fputs("Size:  ", stdout);
-      scanf("%d", &Size);
-   }
-   else
-   {
-      Size = atoi(argv[1]);
-   }
-   char file_name[14];
-   snprintf(file_name, 14, "solution%d.txt", Size);
-   int ret = remove(file_name);
-
-   if (ret == 0)
-      printf("File deleted successfully\n");
-
-   Board = (int *)calloc(Size, sizeof *Board);
-   Trial = (int *)calloc(Size * 2, sizeof *Board);
-   /* Initial permutation generated. */
-   for (Idx = 0; Idx < Size; Idx++)
-      Board[Idx] = Idx;
-
-   // printf("row[%d] ", 0);
-   // printBoard(Board, Size);
-   Nqueens(Board, Trial, Size, 0);
-
-   printf("%3d ==> %10ld  %10ld \n",
-          Size, Nunique, Ntotal);
-   end_time = wtime();
-   total_time = end_time - start_time;
-   printf("\nTempo de execução:\t%.6f sec \n", total_time);
-
-   fptr = fopen("time-seq-nqueens.csv", "a");
-
-   fprintf(fptr, "%3d,%10ld,%10ld,%10.4f\n",
-           Size, Nunique, Ntotal, total_time);
-
-   fclose(fptr);
-
-   return 0;
-}
