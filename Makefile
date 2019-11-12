@@ -25,7 +25,7 @@ help:
 	@echo "mpirun -np 3 -mca btl ^openib  -mca orte_base_help_aggregate 0 ./mpi-nqueens"
 	
 clean:
-	rm -f *.o *~ $(TARGET)
+	rm -f *.o *.txt *~ $(TARGET) 
 
 run:
 	mpirun -np 2 --hostfile mp -mca btl ^openib  -mca orte_base_help_aggregate 0 ./mpi-nqueens	16
