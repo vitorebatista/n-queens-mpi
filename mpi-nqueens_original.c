@@ -22,7 +22,7 @@
 
 
 long int Nunique = 0, // Accumulate results here
-    Ntotal = 0;
+    total_all = 0;
 
 enum
 {
@@ -94,7 +94,7 @@ void StartQueens(int size, double *clientTime)
             printf("Received results from client %d (%d, %d)\n",
                    proc, Count[0], Count[1]);
         Nunique += Count[0];
-        Ntotal += Count[1];
+        total_all += Count[1];
         commBuffer[1] = col++;
         if (TRACE)
             printf("Sending client %d job %d,%d\n", proc,
@@ -115,7 +115,7 @@ void StartQueens(int size, double *clientTime)
             printf("Received results from client %d (%d, %d)\n",
                    proc, Count[0], Count[1]);
         Nunique += Count[0];
-        Ntotal += Count[1];
+        total_all += Count[1];
         if (TRACE)
             printf("Sending client %d termination message\n", proc);
         MPI_Send(commBuffer, 2, MPI_INT, proc, INIT, MPI_COMM_WORLD);
@@ -196,7 +196,7 @@ void ProcessQueens(int myPos)
         }
         // Zero out the counters for THIS problem start.
         Nunique = 0,
-        Ntotal = 0;
+        total_all = 0;
         swap(int, board[0], board[col]);
         // CRITICAL:  mark [0] as used, and then as unused
         Mark(0, board[0], size, Diag, AntiD, TRUE);
@@ -208,7 +208,7 @@ void ProcessQueens(int myPos)
         swap(int, board[0], board[col]); // Undo the swap
                                          // Put the data into the communication vector
         Count[0] = Nunique;
-        Count[1] = Ntotal;
+        Count[1] = total_all;
         if (TRACE)
             printf("Client %d sending results (%d, %d).\n",
                    myPos, Count[0], Count[1]);
@@ -374,7 +374,7 @@ void Nqueens(int Board[], int Trial[], int Size, int Row)
         if (Idx)
         {
             Nunique++;
-            Ntotal += Idx;
+            total_all += Idx;
         }
     }
     return;
@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
         puts("Server is back from StartQueens.");
 
         printf("%3d ==> %10ld  %10ld \n",
-               size, Nunique, Ntotal);
+               size, Nunique, total_all);
         // for (k = 1; k < nProc; k++)
         //     printf("%15.7lg", clientTime[k]);
         putchar('\n');
