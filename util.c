@@ -1,7 +1,6 @@
 #include "time.c"
 // https://en.wikipedia.org/wiki/Eight_queens_puzzle
 
-
 long int total_unique = 0, // Accumulate results here
     total_all = 0;
 

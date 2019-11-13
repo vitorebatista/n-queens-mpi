@@ -80,12 +80,11 @@ void MasterQueens(int size)
         total_all += Count[1];
         fsize = Count[2];
         commBuffer[1] = col++;
-        char char_info[fsize + 1];
-        printf("\n\n\n Tamanho do arquivo1 = %d\n\n\n", fsize);
+        char *char_info = malloc(fsize + 1);
+
         if (Count[1] > 0)
         {
             MPI_Recv(char_info, fsize + 1, MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
-            printf("\nVai adicionar conteúdo no arquivo %s\n", file_name);
             file_result = fopen(file_name, "a");
             fprintf(file_result, "%s", char_info);
             fclose(file_result);
@@ -94,8 +93,8 @@ void MasterQueens(int size)
         {
             printf("\n\nNão tem resultado para enviar\n\n");
         }
+        free(char_info);
 
-        //printf("\n\nstring1: %s\n", char_info);
         printf("Enviando para o escravo %d os parâmetros %d,%d\n", proc, commBuffer[0], commBuffer[1]);
         MPI_Send(commBuffer, 2, MPI_INT, proc, TAG_INIT, MPI_COMM_WORLD);
     }
@@ -113,31 +112,30 @@ void MasterQueens(int size)
         total_all += Count[1];
         fsize = Count[2];
         commBuffer[1] = col++;
-        char char_info[fsize + 1];
-        printf("\n\n\nTamanho do arquivo2 = %d\n\n\n", fsize);
+        char *char_info = malloc(fsize + 1);
+        
         if (Count[1] > 0)
         {
             MPI_Recv(char_info, fsize + 1, MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
         }
-        //printf("\n\n String recebida: %s \n", char_info);
 
         printf("Enviando para o escravo %d msg de termino\n", proc);
         MPI_Send(commBuffer, 2, MPI_INT, proc, TAG_INIT, MPI_COMM_WORLD);
 
         if (Count[1] > 0)
         {
-            printf("\nVai adicionar conteúdo no arquivo %s\n", file_name);
             file_result = fopen(file_name, "a"); //Deve concatenar = a
             fprintf(file_result, "%s", char_info);
             fclose(file_result);
         }
+        free(char_info);
     }
     for (proc = 1; proc < nProc; proc++)
     {
         MPI_Send(&proc, 0, MPI_INT, proc, TAG_EXIT, MPI_COMM_WORLD);
         printf("Enviando EXIT para %d\n", proc);
     }
-    puts("Terminando StartQueens.");
+    puts("Terminando MasterQueens.");
 }
 
 // Prototype for forward referencing
@@ -215,27 +213,11 @@ void ProcessQueens(int myPos)
 
             fseek(file_result, 0L, SEEK_END);
             fsize = ftell(file_result);
-            printf("\nTamanho fo arquivo: %d", fsize);
-            printf("\n\nteste2\n\n");
-            printf("\n\nteste2\n\n");
-            printf("\n\nteste2\n\n");
-            printf("\n\nteste2\n\n");
-            fseek(file_result, 0L, SEEK_SET);
-            printf("\n\nteste3\n\n");
-            printf("\n\nteste3\n\n");
-            printf("\n\nteste3\n\n");
-            printf("\n\nteste3\n\n");
-            //rewind(file_result);
+            fclose(file_result);
+            file_result = fopen(file_name, "r");
         }
-        printf("\nTamanho fo arquivo: %d", fsize);
-        //fsize = 6955555; //134521524
-        // int char_size = fsize + 1;
-        // if (fsize > LIMITE_CHAR)
-        //     char_size = LIMITE_CHAR;
 
-        char char_info[fsize + 1];
-        char_info[fsize + 1] = (char)0;
-
+        char *char_info = malloc(fsize+1);
         int_info[0] = total_unique;
         int_info[1] = total_all;
         int_info[2] = fsize;
@@ -246,39 +228,15 @@ void ProcessQueens(int myPos)
 
         if (total_all > 0)
         {
+            fread(char_info, 1, fsize, file_result);
+            char_info[fsize] = (char)0;
 
-            printf("\n\nteste4\n\n");
-            printf("\n\nteste4\n\n");
-            printf("\n\nteste4\n\n");
-            printf("\n\nteste4\n\n");
-            // int count_size = fsize / LIMITE_CHAR + 1;
-            //for(int pos = 0; pos <= count_size; pos++){
-            //int start = pos * LIMITE_CHAR + 1;
-            // int limit = 0;
-            // int bytesRead;
-            printf("\n\nteste1\n\n");
-            printf("\n\nteste1\n\n");
-            printf("\n\nteste1\n\n");
-            printf("\n\nteste1\n\n");
-            // while ((bytesRead = fread(char_info, 1, LIMITE_CHAR, file_result)) > 0)
-            // {
-            //     printf("\n\nlimit=%d", ++limit);
-            //     MPI_Send(char_info, LIMITE_CHAR, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
-            // }
-            
-            fread(char_info, 1, fsize + 1, file_result);
-            
             fclose(file_result);
-            
-            
-            MPI_Send(char_info, fsize+1, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
 
-            //}
+            MPI_Send(char_info, fsize + 1, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
+            free(char_info);
         }
 
-        //printf("\n\n\nchar_info = %s\n\n\n", char_info);
-        //int countPart = fsize / 10000000;
-        //printf("\n\nPreparar para o for %d\n\n", countPart);
         if (total_all > 0)
         {
         }
@@ -297,36 +255,6 @@ void ProcessQueens(int myPos)
     MPI_Recv(buffer, 0, MPI_INT, 0, TAG_EXIT, MPI_COMM_WORLD, &Status);
 }
 
-int main1(int argc, char *argv[])
-{
-    FILE *file = NULL;
-    unsigned char buffer[1024]; // array of bytes, not pointers-to-bytes
-    size_t bytesRead = 0;
-
-    file = fopen("solution12.txt", "r");
-    fseek(file, 0L, SEEK_END);
-    int fsize = ftell(file);
-    printf("\nTamanho fo arquivo: %d", fsize);
-    fseek(file, 0L, SEEK_SET);
-
-    if (file != NULL)
-    {
-        int pos = 0;
-        // read up to sizeof(buffer) bytes
-        while ((bytesRead = fread(buffer, 1, fsize/2, file)) > 0)
-        {
-            printf("\n\npo=%d",pos);
-            pos++;
-            // process bytesRead worth of data in buffer
-        }
-    }
-    else
-    {
-        printf("erro");
-    }
-    
-    exit(0);
-}
 int main(int argc, char *argv[])
 {
     int nProc; // Número de processos a serem executados
