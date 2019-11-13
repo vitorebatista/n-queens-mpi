@@ -24,7 +24,7 @@ Itens do MPI_Status:
 /* Função que irá fazer a gestão dos jobs do MPI com a divisão dos parâmetros  */
 /* Quando os escravos terminarem, eles enviarão o conteúdo para o mestre armazenar */
 /* em um arquivo solution<n>.txt */
-void MasterQueens(int size, double *clientTime)
+void MasterQueens(int size)
 {
     int col, k,
         commBuffer[2],          // Communication buffer -- size, [0]
@@ -202,7 +202,11 @@ void ProcessQueens(int myPos)
         //printf("\nenviou!!\n");
 
         printf("Escravo %d esperando por um trabalho,\n", myPos);
-
+        int ret = remove(file_name);
+        if (ret == 0)
+            printf("Arquivo do escravo %d excluído com sucesso\n", myPos);
+        else
+            printf("Erro ao excluir arquivo do escravo %d\n", myPos);
         MPI_Recv(buffer, 2, MPI_INT, 0, TAG_INIT, MPI_COMM_WORLD, &Status);
         size = buffer[0];
         col = buffer[1];
@@ -230,34 +234,39 @@ int main(int argc, char *argv[])
     if (myPos == MPI_MATER) //Mestre
     {
         double start_time = wtime();
-        double end_time;
-        int size = 12;
+        double end_time, total_time;
+        int Size = 12;
         int k;
         FILE *fptr;
-        double ClockT, CPU[2], Clock[2], Lapsed,
-            *clientTime = (double *)calloc(nProc, sizeof *clientTime);
 
         puts("Server has entered its part of main");
 
         if (argc == 2)
         {
-            size = atoi(argv[1]);
-            printf("\nsize: %d\n", size);
+            Size = atoi(argv[1]);
+            printf("\nsize: %d\n", Size);
         }
 
         puts("Vai iniciar a chamada da função MasterQueens.");
 
-        MasterQueens(size, clientTime);
+        MasterQueens(Size);
 
         puts("Término da função MasterQueens.");
-
-        printf("%3d ==> %10ld  %10ld \n", size, total_unique, total_all);
-        // for (k = 1; k < nProc; k++)
-        //     printf("%15.7lg", clientTime[k]);
-        putchar('\n');
         end_time = wtime();
+        total_time = end_time - start_time;
+        printf("%3d ==> %10ld  %10ld \n", Size, total_unique, total_all);
+        printf("\nTempo de execução:\t%.6f sec \n", total_time);
+        
 
-        printf("\n\tTempo de execução:\t%.6f sec \n", end_time - start_time);
+        fptr = fopen("time-mpi-nqueens.csv", "a");
+        fprintf(fptr, "%3d,%10ld,%10ld,%10.4f\n",
+           Size, total_unique, total_all, total_time);
+
+        putchar('\n');
+        
+
+        fclose(fptr);
+
     }
     else // I.e., this is the client/slave/node
         ProcessQueens(myPos);

@@ -10,7 +10,6 @@ int main(int argc, char *argv[])
    double end_time, total_time;
    int *Board, *Trial, Idx, Size;
    FILE *fptr;
-   double Clock, CPUstart, ClockStart, Lapsed;
 
    if (argc < 2)
    {
@@ -38,8 +37,7 @@ int main(int argc, char *argv[])
    // printBoard(Board, Size);
    Nqueens(Board, Trial, Size, 0, 0);
 
-   printf("%3d ==> %10ld  %10ld \n",
-          Size, total_unique, total_all);
+   printf("%3d ==> %10ld  %10ld \n", Size, total_unique, total_all);
    end_time = wtime();
    total_time = end_time - start_time;
    printf("\nTempo de execução:\t%.6f sec \n", total_time);
