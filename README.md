@@ -69,5 +69,23 @@ As tabelas a seguir fornecem o número de soluções para colocar n rainhas em u
 | 17 | 	11,977,939	| 95,815,104
 | 18 | 	83,263,591	| 666,090,624
 
+
+## Compilação
+
+Estando dentro do diretório correto basta executar o *Makefile*.
+
+> $ make
+
+Após execução deste comando os códigos serão compilados e gerados os executáveis e binarios.
+
+## Excecução
+
+Para executar o modo sequencial, utilize a função abaixo com o primeiro parâmetro o número de rainhas.
+> $ ./seq-nqueens 12
+
+Já para o paralelo, utilize verifique o arquivo `mp` utilizado para o `--hostfile`
+
+> $ mpirun -np 8 --hostfile mp ./mpi-nqueens 12
+
 ## Referências:
 * http://penguin.ewu.edu/~trolfe/Queens/OptQueen.html

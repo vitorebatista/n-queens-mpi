@@ -210,7 +210,6 @@ void ProcessQueens(int myPos)
                 printf("\n\n****Error\n\n***");
             }
             //https://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
-
             fseek(file_result, 0L, SEEK_END);
             fsize = ftell(file_result);
             fclose(file_result);
