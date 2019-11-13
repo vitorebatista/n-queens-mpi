@@ -250,11 +250,11 @@ void ProcessQueens(int myPos)
             printf("\n\nteste4\n\n");
             printf("\n\nteste4\n\n");
             printf("\n\nteste4\n\n");
-            int count_size = fsize / LIMITE_CHAR + 1;
+            // int count_size = fsize / LIMITE_CHAR + 1;
             //for(int pos = 0; pos <= count_size; pos++){
             //int start = pos * LIMITE_CHAR + 1;
-            int limit = 0;
-            int bytesRead;
+            // int limit = 0;
+            // int bytesRead;
             printf("\n\nteste1\n\n");
             printf("\n\nteste1\n\n");
             printf("\n\nteste1\n\n");
@@ -302,7 +302,7 @@ int main1(int argc, char *argv[])
     unsigned char buffer[1024]; // array of bytes, not pointers-to-bytes
     size_t bytesRead = 0;
 
-    file = fopen("solution15_1.txt", "r");
+    file = fopen("solution12.txt", "r");
     fseek(file, 0L, SEEK_END);
     int fsize = ftell(file);
     printf("\nTamanho fo arquivo: %d", fsize);
@@ -312,7 +312,7 @@ int main1(int argc, char *argv[])
     {
         int pos = 0;
         // read up to sizeof(buffer) bytes
-        while ((bytesRead = fread(buffer, 1, fsize, file)) > 0)
+        while ((bytesRead = fread(buffer, 1, fsize/2, file)) > 0)
         {
             printf("\n\npo=%d",pos);
             pos++;
