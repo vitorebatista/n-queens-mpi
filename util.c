@@ -227,7 +227,10 @@ int SymmetryOps(
     
     snprintf(file_name, 24, "solution%d_%d.txt", Size, Process);
     file_result = fopen(file_name, "a");
-
+    if (file_result == NULL)
+    {
+        printf("\n\n****Error ao abrir o arquivo %s para escrever \n\n***", file_name);
+    }
     Rotate(Trial, Scratch, Size, 0);
     Idx = intncmp(Board, Trial, Size);
     if (Idx > 0)
