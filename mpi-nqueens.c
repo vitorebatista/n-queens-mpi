@@ -119,7 +119,7 @@ void MasterQueens(int size)
         {
             MPI_Recv(char_info, fsize + 1, MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
         }
-        printf("\n\n String recebida: %s \n", char_info);
+        //printf("\n\n String recebida: %s \n", char_info);
 
         printf("Enviando para o escravo %d msg de termino\n", proc);
         MPI_Send(commBuffer, 2, MPI_INT, proc, TAG_INIT, MPI_COMM_WORLD);
@@ -229,11 +229,12 @@ void ProcessQueens(int myPos)
         }
         printf("\nTamanho fo arquivo: %d", fsize);
         //fsize = 6955555; //134521524
-        int char_size = fsize + 1;
-        if (fsize > LIMITE_CHAR)
-            char_size = LIMITE_CHAR;
+        // int char_size = fsize + 1;
+        // if (fsize > LIMITE_CHAR)
+        //     char_size = LIMITE_CHAR;
 
-        char char_info[char_size + 1];
+        char char_info[fsize + 1];
+        char_info[fsize + 1] = (char)0;
 
         int_info[0] = total_unique;
         int_info[1] = total_all;
@@ -269,7 +270,7 @@ void ProcessQueens(int myPos)
             
             fclose(file_result);
             
-            char_info[fsize + 1] = (char)0;
+            
             MPI_Send(char_info, fsize+1, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
 
             //}
