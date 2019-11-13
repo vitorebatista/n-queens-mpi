@@ -12,14 +12,14 @@ Itens do MPI_Status:
     int MPI_ERROR;
 } MPI_Status;
 */
+#define LIMITE_CHAR 955555
 
-#define MPI_MATER 0 // Zero para o mestre MPI
-#define TAG_INIT 1 // Message to client:  size and [0]
-#define TAG_DATA_INT 2 // Message from client with results
+#define MPI_MATER 0     // Zero para o mestre MPI
+#define TAG_INIT 1      // Message to client:  size and [0]
+#define TAG_DATA_INT 2  // Message from client with results
 #define TAG_DATA_CHAR 3 // Message from client with results
-#define TAG_EXIT 4 // Message from client with CPU time \
+#define TAG_EXIT 4      // Message from client with CPU time \
                // Also to client, giving permission to exit
-
 
 /* Função que irá fazer a gestão dos jobs do MPI com a divisão dos parâmetros  */
 /* Quando os escravos terminarem, eles enviarão o conteúdo para o mestre armazenar */
@@ -34,11 +34,19 @@ void MasterQueens(int size)
         proc,                   // For loop [1..nProc-1] within initial message
         nActive;                // Number of active processes
     int fsize;
-    char file_name[24];   
-    FILE *file_result; 
+    char file_name[24];
+    FILE *file_result;
     MPI_Status Status;
 
     puts("Início da função MasterQueens");
+
+    // Remove arquivo para garantir a correta construção
+    snprintf(file_name, 24, "solution%d.txt", size);
+    int ret = remove(file_name);
+    if (ret == 0)
+        printf("Arquivo do escravo %d excluído com sucesso\n", 0);
+    else
+        printf("Erro ao excluir arquivo do escravo %d\n", 0);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nProc);
 
@@ -74,7 +82,19 @@ void MasterQueens(int size)
         commBuffer[1] = col++;
         char char_info[fsize + 1];
         printf("\n\n\n Tamanho do arquivo1 = %d\n\n\n", fsize);
-        MPI_Recv(char_info, fsize+1, MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
+        if (Count[1] > 0)
+        {
+            MPI_Recv(char_info, fsize + 1, MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
+            printf("\nVai adicionar conteúdo no arquivo %s\n", file_name);
+            file_result = fopen(file_name, "a");
+            fprintf(file_result, "%s", char_info);
+            fclose(file_result);
+        }
+        else
+        {
+            printf("\n\nNão tem resultado para enviar\n\n");
+        }
+
         //printf("\n\nstring1: %s\n", char_info);
         printf("Enviando para o escravo %d os parâmetros %d,%d\n", proc, commBuffer[0], commBuffer[1]);
         MPI_Send(commBuffer, 2, MPI_INT, proc, TAG_INIT, MPI_COMM_WORLD);
@@ -84,29 +104,33 @@ void MasterQueens(int size)
     commBuffer[0] = 0;
     while (nActive > 0)
     {
-        printf("%d pending\n", nActive);
+        printf("%d pendente\n", nActive);
         MPI_Recv(Count, 3, MPI_INT, MPI_ANY_SOURCE, TAG_DATA_INT, MPI_COMM_WORLD, &Status);
         --nActive;
         proc = Status.MPI_SOURCE;
-        printf("Received results from client %d (%d, %d)\n", proc, Count[0], Count[1]);
+        printf("Resultados recebidos do escravo %d (%d, %d)\n", proc, Count[0], Count[1]);
         total_unique += Count[0];
         total_all += Count[1];
         fsize = Count[2];
         commBuffer[1] = col++;
         char char_info[fsize + 1];
         printf("\n\n\nTamanho do arquivo2 = %d\n\n\n", fsize);
-        MPI_Recv(char_info, fsize+1 , MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
-        //printf("\n\n String recebida: %s \n", char_info);
-        
+        if (Count[1] > 0)
+        {
+            MPI_Recv(char_info, fsize + 1, MPI_CHAR, MPI_ANY_SOURCE, TAG_DATA_CHAR, MPI_COMM_WORLD, &Status);
+        }
+        printf("\n\n String recebida: %s \n", char_info);
+
         printf("Enviando para o escravo %d msg de termino\n", proc);
         MPI_Send(commBuffer, 2, MPI_INT, proc, TAG_INIT, MPI_COMM_WORLD);
-        
-        
-        snprintf(file_name, 24, "solution%d.txt", size);
-        printf("\nVai adicionar conteúdo no arquivo %s\n", file_name);
-        file_result = fopen(file_name, "w"); //somente leitura
-        fprintf(file_result, "%s", char_info);
-        fclose(file_result);
+
+        if (Count[1] > 0)
+        {
+            printf("\nVai adicionar conteúdo no arquivo %s\n", file_name);
+            file_result = fopen(file_name, "a"); //Deve concatenar = a
+            fprintf(file_result, "%s", char_info);
+            fclose(file_result);
+        }
     }
     for (proc = 1; proc < nProc; proc++)
     {
@@ -163,7 +187,7 @@ void ProcessQueens(int myPos)
         swap(int, board[0], board[col]);
         // CRITICAL:  mark [0] as used, and then as unused
         Mark(0, board[0], size, Diag, AntiD, TRUE);
-        
+
         printf("Escravo %d vai executar o Nqueens\n", myPos);
         //fflush(stdout);
         Nqueens(board, trial, size, 1, myPos);
@@ -171,42 +195,99 @@ void ProcessQueens(int myPos)
         Mark(0, board[0], size, Diag, AntiD, FALSE);
         swap(int, board[0], board[col]); // Undo the swap
                                          // Put the data into the communication vector
-        
+
         printf("Escravo %d realizou o swap\n", myPos);
-        
-        snprintf(file_name, 24, "solution%d_%d.txt", size, myPos);
-        printf("Escravo %d vai abrir arquivo solution%d_%d.txt", myPos, size, myPos);
-        file_result = fopen(file_name, "r"); //somente leitura
-        
-        //https://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
-        fseek(file_result, 0, SEEK_END);
-        int fsize = ftell(file_result);
-        fseek(file_result, 0, SEEK_SET);
-        char char_info[fsize + 1];
-        //char char_info[20];
-        fread(char_info, 1, fsize, file_result);
-        fclose(file_result);
-        char_info[fsize] = (char)0;
-        //printf("\n\n\nchar_info = %c\n\n\n", char_info);
+        printf("\n\nVai enviar um total de: %ld\n", total_all);
+
+        int fsize = 0;
+
+        if (total_all > 0)
+        {
+            snprintf(file_name, 24, "solution%d_%d.txt", size, myPos);
+            printf("Escravo %d vai abrir arquivo solution%d_%d.txt\n", myPos, size, myPos);
+            //printf(file_name);
+            file_result = fopen(file_name, "r"); //somente leitura
+            if (file_result == NULL)
+            {
+                printf("\n\n****Error\n\n***");
+            }
+            //https://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
+
+            fseek(file_result, 0L, SEEK_END);
+            fsize = ftell(file_result);
+            printf("\nTamanho fo arquivo: %d", fsize);
+            printf("\n\nteste2\n\n");
+            printf("\n\nteste2\n\n");
+            printf("\n\nteste2\n\n");
+            printf("\n\nteste2\n\n");
+            fseek(file_result, 0L, SEEK_SET);
+            printf("\n\nteste3\n\n");
+            printf("\n\nteste3\n\n");
+            printf("\n\nteste3\n\n");
+            printf("\n\nteste3\n\n");
+            //rewind(file_result);
+        }
+        printf("\nTamanho fo arquivo: %d", fsize);
+        //fsize = 6955555; //134521524
+        int char_size = fsize + 1;
+        if (fsize > LIMITE_CHAR)
+            char_size = LIMITE_CHAR;
+
+        char char_info[char_size + 1];
 
         int_info[0] = total_unique;
         int_info[1] = total_all;
         int_info[2] = fsize;
 
-        printf("Escravo %d enviando resultado (%d, %d) com tamanho=%d.\n",
-                   myPos, int_info[0], int_info[1],int_info[2]);
+        printf("\nEscravo %d enviando resultado (%d, %d) com tamanho=%d.\n",
+               myPos, int_info[0], int_info[1], int_info[2]);
         MPI_Send(int_info, 3, MPI_INT, 0, TAG_DATA_INT, MPI_COMM_WORLD);
-        int countPart = fsize / 10000000;
-        printf("\n\nPreparar para o for %d\n\n", countPart);
-        MPI_Send(char_info, fsize + 1, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
-        //printf("\nenviou!!\n");
+
+        if (total_all > 0)
+        {
+
+            printf("\n\nteste4\n\n");
+            printf("\n\nteste4\n\n");
+            printf("\n\nteste4\n\n");
+            printf("\n\nteste4\n\n");
+            int count_size = fsize / LIMITE_CHAR + 1;
+            //for(int pos = 0; pos <= count_size; pos++){
+            //int start = pos * LIMITE_CHAR + 1;
+            int limit = 0;
+            int bytesRead;
+            printf("\n\nteste1\n\n");
+            printf("\n\nteste1\n\n");
+            printf("\n\nteste1\n\n");
+            printf("\n\nteste1\n\n");
+            // while ((bytesRead = fread(char_info, 1, LIMITE_CHAR, file_result)) > 0)
+            // {
+            //     printf("\n\nlimit=%d", ++limit);
+            //     MPI_Send(char_info, LIMITE_CHAR, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
+            // }
+            
+            fread(char_info, 1, fsize + 1, file_result);
+            
+            fclose(file_result);
+            
+            char_info[fsize + 1] = (char)0;
+            MPI_Send(char_info, fsize+1, MPI_CHAR, 0, TAG_DATA_CHAR, MPI_COMM_WORLD);
+
+            //}
+        }
+
+        //printf("\n\n\nchar_info = %s\n\n\n", char_info);
+        //int countPart = fsize / 10000000;
+        //printf("\n\nPreparar para o for %d\n\n", countPart);
+        if (total_all > 0)
+        {
+        }
+        int ret = remove(file_name);
+        // if (ret == 0)
+        //     printf("Arquivo do escravo %d excluído com sucesso\n", myPos);
+        // else
+        //     printf("Erro ao excluir arquivo do escravo %d\n", myPos);
 
         printf("Escravo %d esperando por um trabalho,\n", myPos);
-        int ret = remove(file_name);
-        if (ret == 0)
-            printf("Arquivo do escravo %d excluído com sucesso\n", myPos);
-        else
-            printf("Erro ao excluir arquivo do escravo %d\n", myPos);
         MPI_Recv(buffer, 2, MPI_INT, 0, TAG_INIT, MPI_COMM_WORLD, &Status);
         size = buffer[0];
         col = buffer[1];
@@ -215,8 +296,36 @@ void ProcessQueens(int myPos)
     MPI_Recv(buffer, 0, MPI_INT, 0, TAG_EXIT, MPI_COMM_WORLD, &Status);
 }
 
+int main1(int argc, char *argv[])
+{
+    FILE *file = NULL;
+    unsigned char buffer[1024]; // array of bytes, not pointers-to-bytes
+    size_t bytesRead = 0;
 
+    file = fopen("solution15_1.txt", "r");
+    fseek(file, 0L, SEEK_END);
+    int fsize = ftell(file);
+    printf("\nTamanho fo arquivo: %d", fsize);
+    fseek(file, 0L, SEEK_SET);
 
+    if (file != NULL)
+    {
+        int pos = 0;
+        // read up to sizeof(buffer) bytes
+        while ((bytesRead = fread(buffer, 1, fsize, file)) > 0)
+        {
+            printf("\n\npo=%d",pos);
+            pos++;
+            // process bytesRead worth of data in buffer
+        }
+    }
+    else
+    {
+        printf("erro");
+    }
+    
+    exit(0);
+}
 int main(int argc, char *argv[])
 {
     int nProc; // Número de processos a serem executados
@@ -226,10 +335,9 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myPos);
     MPI_Comm_size(MPI_COMM_WORLD, &nProc);
-    
+
     printf("Processo %d de %d iniciado.\n", myPos, nProc);
     //fflush(stdout);
-    
 
     if (myPos == MPI_MATER) //Mestre
     {
@@ -256,17 +364,14 @@ int main(int argc, char *argv[])
         total_time = end_time - start_time;
         printf("%3d ==> %10ld  %10ld \n", Size, total_unique, total_all);
         printf("\nTempo de execução:\t%.6f sec \n", total_time);
-        
 
         fptr = fopen("time-mpi-nqueens.csv", "a");
         fprintf(fptr, "%3d,%10ld,%10ld,%10.4f\n",
-           Size, total_unique, total_all, total_time);
+                Size, total_unique, total_all, total_time);
 
         putchar('\n');
-        
 
         fclose(fptr);
-
     }
     else // I.e., this is the client/slave/node
         ProcessQueens(myPos);
