@@ -5,6 +5,7 @@ O problema das n damas é o problema matemático de dispor n damas em um tabulei
 ## Rejeitando soluções equivalentes
 
 Você pode restringir as soluções aceitáveis ​​às soluções exclusivas. Algumas soluções possuem o que chamamos de simetria rotacional: se você girar a placa em 180o, ou talvez até 90o, você terá exatamente a mesma configuração. Abaixo é demonstrado duas soluções, uma com simetria rotacional de 180o e outra com simetria rotacional de 90o. A numeração na figura mostra as rainhas que são equivalentes na rotação.
+```
       .  1  .  .  .  .                .  1  .  .  .
       .  .  .  2  .  .                .  .  .  .  1
       .  .  .  .  .  3                .  .  2  .  .
@@ -12,7 +13,7 @@ Você pode restringir as soluções aceitáveis ​​às soluções exclusivas.
       .  .  2  .  .  .                .  .  .  1  .
       .  .  .  .  1  .         Symmetric on 90o rotation
 Symmetric on 180o rotation
-
+```
 Se uma solução não possuir essa simetria rotacional, rotações sucessivas a 90o gerarão outras soluções que serão descobertas à medida que você processa as soluções. Além das rotações, há outra operação de simetria: reflexão em um espelho. Pela própria natureza do problema das rainhas N, uma solução válida não pode ter uma simetria de espelho. Isso significa que cada solução válida também possui imagens espelhadas que serão exibidas no processamento. A Figura 3 mostra a solução para o problema do 5-Queens que não possui simetria rotacional (a Figura 2 mostra a solução simétrica). Consequentemente, existem oito soluções equivalentes, sendo simplesmente rotações ou reflexos de uma configuração inicial da placa.
 
 Você pode pensar que rejeitar soluções equivalentes exigiria a pesquisa de soluções aceitas anteriormente, mas existe uma abordagem alternativa que não exige salvar as soluções anteriores. Você está representando o quadro por uma matriz de posições de coluna. Tudo o que você precisa fazer é considerar a ordenação lexicográfica das soluções, pensando na matriz como um número de N dígitos. Se você tem a regra de que só aceitará a primeira solução nesse pedido de soluções equivalentes, a rejeição de todo o resto é direta. Para uma solução candidata, gire-a em incrementos sucessivos de 90o. Se a qualquer momento o resultado for comparado como "menor", rejeite a solução candidata. Para as imagens espelhadas, você pode gerar uma imagem espelhada e, em seguida, girá-la através de três incrementos sucessivos de 90o para verificar as quatro imagens espelhadas.
